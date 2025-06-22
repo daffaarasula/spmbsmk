@@ -7,37 +7,36 @@ include 'db_config.php';
 // --- Handle Delete Action ---
 if (isset($_POST['delete_id']) && is_numeric($_POST['delete_id'])) {
     $delete_id = (int)$_POST['delete_id'];
-    
+
     // Begin transaction
     $conn->begin_transaction();
-    
+
     try {
         // Delete related records first (due to foreign key constraints)
         $delete_data_ortu = $conn->prepare("DELETE FROM data_ortu WHERE id_pendaftaran = ?");
         $delete_data_ortu->bind_param("i", $delete_id);
         $delete_data_ortu->execute();
-        
+
         $delete_dokumen = $conn->prepare("DELETE FROM dokumen WHERE id_pendaftaran = ?");
         $delete_dokumen->bind_param("i", $delete_id);
         $delete_dokumen->execute();
-        
+
         // Delete main registration record
         $delete_pendaftaran = $conn->prepare("DELETE FROM pendaftaran WHERE id_pendaftaran = ?");
         $delete_pendaftaran->bind_param("i", $delete_id);
         $delete_pendaftaran->execute();
-        
+
         // Commit transaction
         $conn->commit();
-        
+
         // Set success message
         $_SESSION['success_message'] = "Data pendaftar berhasil dihapus.";
-        
     } catch (Exception $e) {
         // Rollback transaction on error
         $conn->rollback();
         $_SESSION['error_message'] = "Gagal menghapus data pendaftar: " . $e->getMessage();
     }
-    
+
     // Redirect to prevent form resubmission
     header("Location: admin_dashboard.php");
     exit();
@@ -126,6 +125,7 @@ $result_pendaftar = $stmt_main->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -133,14 +133,21 @@ $result_pendaftar = $stmt_main->get_result();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; }
+        body {
+            background-color: #f8f9fa;
+        }
+
         .stats-card {
             border: none;
             border-radius: 0.5rem;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             transition: transform 0.2s ease-in-out;
         }
-        .stats-card:hover { transform: translateY(-5px); }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
         .stats-icon-wrapper {
             width: 60px;
             height: 60px;
@@ -150,16 +157,26 @@ $result_pendaftar = $stmt_main->get_result();
             justify-content: center;
             font-size: 1.75rem;
         }
-        .table thead th { background-color: #e9ecef; }
-        .badge.rounded-pill { padding: 0.4em 0.8em; font-size: 0.85em; }
+
+        .table thead th {
+            background-color: #e9ecef;
+        }
+
+        .badge.rounded-pill {
+            padding: 0.4em 0.8em;
+            font-size: 0.85em;
+        }
+
         .btn-group-actions .btn {
             margin-right: 2px;
         }
+
         .btn-group-actions .btn:last-child {
             margin-right: 0;
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="collapse navbar-collapse" id="adminNavbar">
@@ -220,7 +237,7 @@ $result_pendaftar = $stmt_main->get_result();
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="card stats-card bg-light">
-                     <div class="card-body d-flex align-items-center">
+                    <div class="card-body d-flex align-items-center">
                         <div class="stats-icon-wrapper bg-success bg-opacity-10 text-success me-3">
                             <i class="bi bi-person-check-fill"></i>
                         </div>
@@ -245,7 +262,7 @@ $result_pendaftar = $stmt_main->get_result();
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                 <div class="card stats-card bg-light">
+                <div class="card stats-card bg-light">
                     <div class="card-body d-flex align-items-center">
                         <div class="stats-icon-wrapper bg-danger bg-opacity-10 text-danger me-3">
                             <i class="bi bi-person-x-fill"></i>
@@ -258,7 +275,7 @@ $result_pendaftar = $stmt_main->get_result();
                 </div>
             </div>
         </div>
-        
+
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light py-3">
                 <h4 class="mb-0">Data Pendaftar <small class="text-muted fs-6">(Halaman <?php echo $page; ?> dari <?php echo $total_pages > 0 ? $total_pages : 1; ?>)</small></h4>
@@ -272,17 +289,17 @@ $result_pendaftar = $stmt_main->get_result();
                         </div>
                     </div>
                     <div class="col-md-4">
-                         <select name="filter_jurusan" class="form-select">
+                        <select name="filter_jurusan" class="form-select">
                             <option value="">Semua Jurusan</option>
                             <?php
-                                $distinct_jurusan_sql = "SELECT DISTINCT pilih_jurusan FROM pendaftaran WHERE pilih_jurusan IS NOT NULL AND pilih_jurusan != '' ORDER BY pilih_jurusan";
-                                $distinct_jurusan_result = $conn->query($distinct_jurusan_sql);
-                                if($distinct_jurusan_result && $distinct_jurusan_result->num_rows > 0){
-                                    while($j_row = $distinct_jurusan_result->fetch_assoc()){
-                                        $selected = ($filter_jurusan == $j_row['pilih_jurusan']) ? 'selected' : '';
-                                        echo "<option value=\"".htmlspecialchars($j_row['pilih_jurusan'])."\" $selected>".htmlspecialchars($j_row['pilih_jurusan'])."</option>";
-                                    }
+                            $distinct_jurusan_sql = "SELECT DISTINCT pilih_jurusan FROM pendaftaran WHERE pilih_jurusan IS NOT NULL AND pilih_jurusan != '' ORDER BY pilih_jurusan";
+                            $distinct_jurusan_result = $conn->query($distinct_jurusan_sql);
+                            if ($distinct_jurusan_result && $distinct_jurusan_result->num_rows > 0) {
+                                while ($j_row = $distinct_jurusan_result->fetch_assoc()) {
+                                    $selected = ($filter_jurusan == $j_row['pilih_jurusan']) ? 'selected' : '';
+                                    echo "<option value=\"" . htmlspecialchars($j_row['pilih_jurusan']) . "\" $selected>" . htmlspecialchars($j_row['pilih_jurusan']) . "</option>";
                                 }
+                            }
                             ?>
                         </select>
                     </div>
@@ -292,7 +309,7 @@ $result_pendaftar = $stmt_main->get_result();
                     <div class="col-md-auto">
                         <a href="admin_dashboard.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-repeat me-1"></i>Reset</a>
                     </div>
-                     <div class="col-md-auto ms-md-auto text-end">
+                    <div class="col-md-auto ms-md-auto text-end">
                         <a href="admin_export_csv.php?search=<?php echo urlencode($search_query); ?>&filter_jurusan=<?php echo urlencode($filter_jurusan); ?>" class="btn btn-success">
                             <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i>Export CSV
                         </a>
@@ -315,73 +332,81 @@ $result_pendaftar = $stmt_main->get_result();
                         </thead>
                         <tbody>
                             <?php if ($result_pendaftar && $result_pendaftar->num_rows > 0): ?>
-                                <?php while($row = $result_pendaftar->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo $row['id_pendaftaran']; ?></td>
-                                    <td><?php echo htmlspecialchars($row['nisn']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['nama_siswa']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['asal_sekolah']); ?></td>
-                                    <td><?php echo htmlspecialchars($row['pilih_jurusan']); ?></td>
-                                    <td>
-                                        <span class="badge rounded-pill bg-<?php
-                                            $status_text = strtolower(str_replace(' ', '-', $row['status_pendaftaran'] ?? 'unknown'));
-                                            $badge_class = 'secondary';
-                                            if ($status_text == 'accepted') $badge_class = 'success';
-                                            else if ($status_text == 'rejected') $badge_class = 'danger';
-                                            else if ($status_text == 'pending-review') $badge_class = 'warning text-dark';
-                                            else if ($status_text == 'documents-verified') $badge_class = 'info text-dark';
-                                            else if ($status_text == 'documents-incomplete') $badge_class = 'warning text-dark';
-                                            else if ($status_text == 'waiting-list') $badge_class = 'dark';
-                                            echo $badge_class; ?>">
-                                            <?php echo htmlspecialchars($row['status_pendaftaran'] ?? 'N/A'); ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <?php if($row['pasfoto'] && file_exists($row['pasfoto'])): ?>
-                                            <img src="<?php echo htmlspecialchars($row['pasfoto']); ?>" alt="Pasfoto" width="40" height="50" class="img-thumbnail">
-                                        <?php else: ?>
-                                            <span class="text-muted small">N/A</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group-actions d-flex flex-wrap">
-                                            <a href="admin_view_detail.php?id=<?php echo $row['id_pendaftaran']; ?>" class="btn btn-sm btn-outline-primary" title="Lihat Detail">
-                                                <i class="bi bi-eye-fill"></i>
-                                            </a>
-                                            <a href="admin_edit_registration.php?id=<?php echo $row['id_pendaftaran']; ?>" class="btn btn-sm btn-outline-warning" title="Edit Data">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus Data" 
+                                <?php while ($row = $result_pendaftar->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?php echo $row['id_pendaftaran']; ?></td>
+                                        <td><?php echo htmlspecialchars($row['nisn']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['nama_siswa']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['asal_sekolah']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['pilih_jurusan']); ?></td>
+                                        <td>
+                                            <span class="badge rounded-pill bg-<?php
+                                                                                $status_text = strtolower(str_replace(' ', '-', $row['status_pendaftaran'] ?? 'unknown'));
+                                                                                $badge_class = 'secondary';
+                                                                                if ($status_text == 'accepted') $badge_class = 'success';
+                                                                                else if ($status_text == 'rejected') $badge_class = 'danger';
+                                                                                else if ($status_text == 'pending-review') $badge_class = 'warning text-dark';
+                                                                                else if ($status_text == 'documents-verified') $badge_class = 'info text-dark';
+                                                                                else if ($status_text == 'documents-incomplete') $badge_class = 'warning text-dark';
+                                                                                else if ($status_text == 'waiting-list') $badge_class = 'dark';
+                                                                                echo $badge_class; ?>">
+                                                <?php echo htmlspecialchars($row['status_pendaftaran'] ?? 'N/A'); ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php if ($row['pasfoto'] && file_exists($row['pasfoto'])): ?>
+                                                <img src="<?php echo htmlspecialchars($row['pasfoto']); ?>" alt="Pasfoto" width="40" height="50" class="img-thumbnail">
+                                            <?php else: ?>
+                                                <span class="text-muted small">N/A</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-actions d-flex flex-wrap">
+                                                <a href="admin_view_detail.php?id=<?php echo $row['id_pendaftaran']; ?>" class="btn btn-sm btn-outline-primary" title="Lihat Detail">
+                                                    <i class="bi bi-eye-fill"></i>
+                                                </a>
+                                                <a href="admin_edit_registration.php?id=<?php echo $row['id_pendaftaran']; ?>" class="btn btn-sm btn-outline-warning" title="Edit Data">
+                                                    <i class="bi bi-pencil-fill"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus Data"
                                                     onclick="confirmDelete(<?php echo $row['id_pendaftaran']; ?>, '<?php echo htmlspecialchars($row['nama_siswa'], ENT_QUOTES); ?>')">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
-                                <tr><td colspan="8" class="text-center py-4">Tidak ada data pendaftar yang ditemukan.</td></tr>
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">Tidak ada data pendaftar yang ditemukan.</td>
+                                </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-                
+
                 <?php if ($total_pages > 1): ?>
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item <?php if($page <= 1){ echo 'disabled'; } ?>">
-                            <a class="page-link" href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search_query); ?>&filter_jurusan=<?php echo urlencode($filter_jurusan); ?>">Previous</a>
-                        </li>
-                        <?php for($i = 1; $i <= $total_pages; $i++): ?>
-                        <li class="page-item <?php if($page == $i) {echo 'active'; } ?>">
-                            <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search_query); ?>&filter_jurusan=<?php echo urlencode($filter_jurusan); ?>"><?php echo $i; ?></a>
-                        </li>
-                        <?php endfor; ?>
-                        <li class="page-item <?php if($page >= $total_pages) { echo 'disabled'; } ?>">
-                            <a class="page-link" href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search_query); ?>&filter_jurusan=<?php echo urlencode($filter_jurusan); ?>">Next</a>
-                        </li>
-                    </ul>
-                </nav>
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item <?php if ($page <= 1) {
+                                                        echo 'disabled';
+                                                    } ?>">
+                                <a class="page-link" href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search_query); ?>&filter_jurusan=<?php echo urlencode($filter_jurusan); ?>">Previous</a>
+                            </li>
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <li class="page-item <?php if ($page == $i) {
+                                                            echo 'active';
+                                                        } ?>">
+                                    <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search_query); ?>&filter_jurusan=<?php echo urlencode($filter_jurusan); ?>"><?php echo $i; ?></a>
+                                </li>
+                            <?php endfor; ?>
+                            <li class="page-item <?php if ($page >= $total_pages) {
+                                                        echo 'disabled';
+                                                    } ?>">
+                                <a class="page-link" href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search_query); ?>&filter_jurusan=<?php echo urlencode($filter_jurusan); ?>">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
                 <?php endif; ?>
             </div>
         </div>
@@ -437,12 +462,21 @@ $result_pendaftar = $stmt_main->get_result();
             document.getElementById('deleteId').textContent = id;
             document.getElementById('deleteName').textContent = name;
             document.getElementById('deleteIdInput').value = id;
-            
+
             var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
             deleteModal.show();
         }
     </script>
+    <script>
+        function confirmDelete(id, nama) {
+            if (confirm("Yakin ingin menghapus pendaftar:\n\n" + nama + "\n\nData dan akun login akan dihapus permanen!")) {
+                window.location.href = 'hapus_pendaftar.php?id_pendaftaran=' + id;
+            }
+        }
+    </script>
+
 </body>
+
 </html>
 <?php
 if (isset($stmt_main)) $stmt_main->close();
